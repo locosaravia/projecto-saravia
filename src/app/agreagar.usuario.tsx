@@ -1,11 +1,10 @@
-// crear-usuario.tsx
-import CrearUsuario from "./componentes/CrearUsuario";
+import CrearUsuario from "./crear-usuario/page";
 import Menu from "./componentes/Menu";
 
 const CrearUsuarioPage = () => {
   return (
     <div>
-      <Menu /> {/* Incluir el menú en esta página */}
+      <Menu /> {}
       <h1>Formulario de Crear Usuario</h1>
       <CrearUsuario />
     </div>

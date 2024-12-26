@@ -1,30 +1,25 @@
-/* Menu.module.css */
+/* src/app/componentes/Menu.module.css */
 .navbar {
     background-color: #333;
-    padding: 10px;
+    padding: 1rem;
   }
   
   .menu {
     list-style-type: none;
-    margin: 0;
-    padding: 0;
-    display: flex;  /* Esto asegura que los elementos estén en una fila */
-    flex-direction: row; /* Esto define la dirección como fila (por defecto es fila) */
-    justify-content: space-around; /* Espacio entre los elementos */
-    align-items: center; /* Alinea los elementos al centro */
+    display: flex;
+    gap: 20px;
   }
   
   .menu li {
-    margin: 0 15px; /* Añade espacio entre los links */
+    color: white;
   }
   
   .menu li a {
-    color: white;
     text-decoration: none;
-    font-size: 16px;
+    color: white;
   }
   
   .menu li a:hover {
-    text-decoration: underline;
+    color: #ddd;
   }
   

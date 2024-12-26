@@ -1,64 +1,70 @@
-// src/app/agregar-series/page.tsx
-'use client'
-
+'use client';
 import { useState } from 'react';
+import { addSerie } from '../firebase/promesas';
+import Menu from '../componentes/Menu';
+import styles from '../componentes/AgregarSerie.module.css'
 
-const AgregarSeries = () => {
+const AgregarSerie = () => {
   const [nombre, setNombre] = useState('');
   const [capitulos, setCapitulos] = useState('');
   const [fechaEstreno, setFechaEstreno] = useState('');
   const [director, setDirector] = useState('');
+  const [mensaje, setMensaje] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Aquí puedes agregar la lógica para guardar la serie en Firestore
-    console.log({ nombre, capitulos, fechaEstreno, director });
+
+    if (!nombre || !capitulos || !fechaEstreno || !director) {
+      setMensaje('Por favor, completa todos los campos.');
+      return;
+    }
+
+    const response = await addSerie(nombre, parseInt(capitulos), fechaEstreno, director);
+    if (response.success) {
+      setMensaje('Serie agregada exitosamente.');
+      setNombre('');
+      setCapitulos('');
+      setFechaEstreno('');
+      setDirector('');
+    } else {
+      setMensaje(`Error: ${response.message}`);
+    }
   };
 
   return (
-    <div>
-      <h2>Agregar Serie</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Nombre:</label>
-          <input
-            type="text"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Capítulos:</label>
-          <input
-            type="number"
-            value={capitulos}
-            onChange={(e) => setCapitulos(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Fecha de Estreno:</label>
-          <input
-            type="date"
-            value={fechaEstreno}
-            onChange={(e) => setFechaEstreno(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Director:</label>
-          <input
-            type="text"
-            value={director}
-            onChange={(e) => setDirector(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit">Agregar</button>
+    <div className={styles.container}>
+      <Menu />
+      <h1 className={styles.title}>Agregar Serie</h1>
+      <form className={styles.form} onSubmit={handleSubmit}>
+        <input
+          type="text"
+          placeholder="Nombre de la serie"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+        />
+        <input
+          type="number"
+          placeholder="Número de capítulos"
+          value={capitulos}
+          onChange={(e) => setCapitulos(e.target.value)}
+        />
+        <input
+          type="date"
+          placeholder="Fecha de estreno"
+          value={fechaEstreno}
+          onChange={(e) => setFechaEstreno(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Director"
+          value={director}
+          onChange={(e) => setDirector(e.target.value)}
+        />
+        <button type="submit">Agregar Serie</button>
       </form>
+      {mensaje && <p className={styles.mensaje}>{mensaje}</p>}
     </div>
   );
 };
 
-export default AgregarSeries;
+export default AgregarSerie;

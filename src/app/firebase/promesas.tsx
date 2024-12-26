@@ -1,101 +1,77 @@
-import { db } from './firebase';
-import { setDoc, doc, getDoc, collection, addDoc, query, getDocs, where } from 'firebase/firestore';
+import { collection, doc, getDocs, query, where, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { db } from './firebase'; // Asegúrate de que la ruta sea correcta
 
-// Usar setDoc con username como ID (opción antigua)
+// Referencias a las colecciones
+const usersCollection = collection(db, 'users');
+const seriesCollection = collection(db, 'series');
+
+// Función para registrar un nuevo usuario
 export const registerUser = async (username: string, password: string) => {
   try {
-    // Verificar si el nombre de usuario ya existe en la base de datos
-    const userRef = doc(db, "users", username); // Referencia al documento usando el nombre de usuario
-    const userDoc = await getDoc(userRef);
-
-    if (userDoc.exists()) {
-      throw new Error("El nombre de usuario ya existe.");
-    }
-
-    // Almacenar el usuario con su contraseña en Firestore
-    await setDoc(userRef, {
-      username: username,
-      password: password,  // Almacena la contraseña como texto sin cifrar
-    });
-
-    alert("Usuario registrado con éxito");
-  } catch (err: any) {
-    console.error("Error registrando usuario:", err);
-    throw new Error(err.message || "Ha ocurrido un error al registrar el usuario.");
+    await addDoc(usersCollection, { username, password });
+    return { success: true, message: 'Usuario registrado exitosamente.' };
+  } catch (error) {
+    console.error('Error al registrar usuario:', error.message);
+    return { success: false, message: error.message };
   }
 };
 
-// Usar addDoc para crear un documento con un ID automático (opción nueva)
-export const registerUserWithAutoID = async (username: string, password: string) => {
-  try {
-    // Obtener la referencia a la colección de usuarios
-    const usersCollectionRef = collection(db, "users");
-
-    // Agregar un nuevo documento con los datos del usuario
-    await addDoc(usersCollectionRef, {
-      username: username,
-      password: password,  // Almacena la contraseña como texto sin cifrar
-    });
-
-    alert("Usuario registrado con éxito");
-  } catch (err: any) {
-    console.error("Error registrando usuario:", err);
-    throw new Error(err.message || "Ha ocurrido un error al registrar el usuario.");
-  }
-};
-
-// Función para hacer login de un usuario
+// Función para verificar credenciales de usuario
 export const loginUser = async (username: string, password: string) => {
   try {
-    // Obtener la referencia al documento del usuario usando el nombre de usuario
-    const userRef = doc(db, "users", username);
-    const userDoc = await getDoc(userRef);
-
-    // Si el documento no existe, el usuario no está registrado
-    if (!userDoc.exists()) {
-      throw new Error("El nombre de usuario no existe.");
-    }
-
-    // Obtener los datos del documento
-    const userData = userDoc.data();
-    
-    // Verificar si la contraseña coincide
-    if (userData?.password !== password) {
-      throw new Error("Contraseña incorrecta.");
-    }
-
-    alert("Usuario autenticado con éxito");
-    return true; // Se retorna true si el login es exitoso
-
-  } catch (err: any) {
-    console.error("Error al iniciar sesión:", err);
-    throw new Error(err.message || "Ha ocurrido un error al iniciar sesión.");
+    const q = query(usersCollection, where('username', '==', username), where('password', '==', password));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.length > 0
+      ? { success: true, message: 'Credenciales válidas.' }
+      : { success: false, message: 'Usuario o contraseña incorrectos.' };
+  } catch (error) {
+    console.error('Error en login:', error.message);
+    return { success: false, message: error.message };
   }
 };
-export const addSeries = async (nombre: string, capitulos: number | string, fechaEstreno: string, director: string) => {
-    try {
-      // Obtener la referencia a la colección de series
-      const seriesCollectionRef = collection(db, "series");
-  
-      // Agregar un nuevo documento con los datos de la serie
-      await addDoc(seriesCollectionRef, {
-        nombre: nombre,
-        capitulos: capitulos,
-        fechaEstreno: fechaEstreno,
-        director: director,
-      });
-  
-      console.log("Serie agregada exitosamente");
-    } catch (err: any) {
-      console.error("Error al agregar la serie:", err);
-      throw new Error(err.message || "Ha ocurrido un error al agregar la serie.");
-    }
-  };
 
-  export const checkUserExists = async (username: string) => {
-    const usersCollection = collection(db, 'usuarios'); // Suponiendo que los usuarios están en una colección llamada 'usuarios'
-    const q = query(usersCollection, where('username', '==', username));
-    const querySnapshot = await getDocs(q);
-  
-    return !querySnapshot.empty; // Si la consulta devuelve algún documento, significa que el usuario existe
-  };
+// Función para agregar una nueva serie
+export const addSerie = async (nombre: string, capitulos: number, fechaEstreno: string, director: string) => {
+  try {
+    await addDoc(seriesCollection, { nombre, capitulos, fechaEstreno, director });
+    return { success: true, message: 'Serie agregada exitosamente.' };
+  } catch (error) {
+    console.error('Error al agregar serie:', error.message);
+    return { success: false, message: error.message };
+  }
+};
+
+// Función para obtener todas las series
+export const fetchSeries = async () => {
+  try {
+    const snapshot = await getDocs(seriesCollection);
+    const series = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return { success: true, data: series };
+  } catch (error) {
+    console.error('Error al obtener series:', error.message);
+    return { success: false, message: error.message };
+  }
+};
+
+// Función para eliminar una serie
+export const deleteSerie = async (id: string) => {
+  try {
+    await deleteDoc(doc(db, 'series', id));
+    return { success: true, message: 'Serie eliminada exitosamente.' };
+  } catch (error) {
+    console.error('Error al eliminar serie:', error.message);
+    return { success: false, message: error.message };
+  }
+};
+
+// Función para actualizar una serie
+export const updateSerie = async (id: string, data: { nombre?: string; capitulos?: number; fechaEstreno?: string; director?: string }) => {
+  try {
+    const docRef = doc(db, 'series', id);
+    await updateDoc(docRef, data);
+    return { success: true, message: 'Serie actualizada exitosamente.' };
+  } catch (error) {
+    console.error('Error al actualizar serie:', error.message);
+    return { success: false, message: error.message };
+  }
+};
